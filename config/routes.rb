@@ -25,10 +25,10 @@ Rails.application.routes.draw do
   match '/500', to: 'errors#internal_error', via: :all, as: :internal_error
 
   # Signin/Signup routes.
-  get '/signin', to: 'sessions#signin', as: :signin
-  get '/signup', to: 'sessions#new', as: :signup
-  post '/signup', to: 'users#create', as: :create_user
-  match '/ldap_signin', to: 'sessions#ldap_signin', as: :ldap_signin, via: [:get, :post]
+  # get '/signin', to: 'sessions#signin', as: :signin
+  # get '/signup', to: 'sessions#new', as: :signup
+  # post '/signup', to: 'users#create', as: :create_user
+  # match '/ldap_signin', to: 'sessions#ldap_signin', as: :ldap_signin, via: [:get, :post]
 
   # Redirect to terms page
   match '/terms', to: 'users#terms', via: [:get, :post]

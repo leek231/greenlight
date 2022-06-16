@@ -19,6 +19,8 @@
 class ApplicationController < ActionController::Base
   include BbbServer
   include Errors
+  include HTTParty
+  include Authenticator
 
   before_action :block_unknown_hosts, :redirect_to_https, :set_user_domain, :set_user_settings, :maintenance_mode?,
   :migration_error?, :user_locale, :check_admin_password, :check_user_role
@@ -28,6 +30,92 @@ class ApplicationController < ActionController::Base
   # Retrieves the current user.
   def current_user
     @current_user ||= User.includes(:role, :main_room).find_by(id: session[:user_id])
+
+    token = nil
+    group = nil
+
+    unless token
+      request.query_parameters.each do |key,value|
+        if key == 'token'
+          token = value
+        end
+        if key == 'group'
+          group = value
+        end
+      end
+    end
+
+    if @current_user.nil?
+
+      unless token
+        redirect_to '/404'
+      end
+
+      if token
+        response = HTTParty.get("https://vznaniya.ru/api/v2/profile",
+                                 :headers => {
+                                   'Content-Type' => 'application/json',
+                                   'Authorization' => 'Bearer ' + token
+                   }
+        )
+
+        if response.headers['content-type'] === "text/html; charset=UTF-8"
+          redirect_to '/404'
+        else
+
+          data = JSON.parse(response.body, object_class: OpenStruct)
+          @current_user ||= User.includes(:role, :main_room).find_by(external_id: data.data.id)
+
+          unless @current_user
+            role_id = 1
+
+            if data.data.role == 'teacher'
+              role_id = 1
+            end
+
+            @user = User.new(:accepted_terms => true, :provider => 'greenlight', :deleted => false, :created_at => Time.now.getutc,:role_id => role_id, :username => data.data.email, :email => data.data.email, :email_verified => true, :name => data.data.name + ' ' + data.data.surname, :external_id => data.data.id)
+            @user.save(:validate => false)
+            room = Room.create(:user_id => @user.id, :name => 'Home', :deleted => false, :created_at => Time.now.getutc, :updated_at => Time.now.getutc)
+            room.save(:validate => false)
+            @user.update(:room_id => room.id)
+            @user.save(:validate => false)
+            if data.data.role == 'teacher'
+              groups_res = HTTParty.get("https://vznaniya.ru/api/v2/groups/filter",
+                                       :headers => {
+                                         'Content-Type' => 'application/json',
+                                         'Authorization' => 'Bearer ' + token
+                                       }
+              )
+
+              groups = JSON.parse(groups_res.body, object_class: OpenStruct).data
+              groups.each_with_index { |group, index|
+                unless Room.exists?(:external_id => group.id)
+                  room = Room.create(:user_id => @user.id, :name => group.name, :deleted => false, :created_at => Time.now.getutc, :updated_at => Time.now.getutc, :external_id => group.id)
+                  room.save(:validate => false)
+                end
+              }
+            end
+
+            @current_user ||= User.includes(:role, :main_room).find_by(external_id: data.data.id)
+
+          end
+
+          if @current_user.nil?
+            redirect_to '/404'
+          end
+
+          loginssss(@current_user)
+
+        end
+      end
+    end
+
+    unless group.nil?
+      room = Room.find_by(external_id: group)
+      if room
+        redirect_to '/b/' + room.uid
+      end
+    end
 
     if Rails.configuration.loadbalanced_configuration && (@current_user && !@current_user.has_role?(:super_admin) &&
          @current_user.provider != @user_domain)

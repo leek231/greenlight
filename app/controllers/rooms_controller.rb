@@ -174,6 +174,8 @@ class RoomsController < ApplicationController
     # Join the user in and start the meeting.
     opts = default_meeting_options
     opts[:user_is_moderator] = true
+    resp = HTTParty.get("https://vznaniya.ru/api/v2/notification/start", :headers => {'Content-Type' => 'application/json' }, :query => { uid: @room.uid, id: @room.external_id })
+    puts resp
 
     # Include the user's choices for the room settings
     @room_settings = JSON.parse(@room[:room_settings])

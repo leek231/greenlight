@@ -36,6 +36,23 @@ module Authenticator
     end
   end
 
+  # Logs a user into GreenLight.
+  def loginssss(user)
+    migrate_twitter_user(user)
+
+    session[:user_id] = user.id
+    user.update(last_login: Time.zone.now)
+
+    logger.info("Support: #{user.email} has successfully logged in.")
+
+    # If there are not terms, or the user has accepted them, check for email verification
+    if !Rails.configuration.terms || user.accepted_terms
+      check_email_verified(user)
+    else
+      redirect_to terms_path
+    end
+  end
+
   # If email verification is disabled, or the user has verified, go to their room
   def check_email_verified(user)
     # Admin users should be redirected to the admin page
@@ -43,7 +60,7 @@ module Authenticator
       redirect_to admins_path
     elsif user.activated?
       # Dont redirect to any of these urls
-      dont_redirect_to = [root_url, signin_url, ldap_signin_url, ldap_callback_url, signup_url, unauthorized_url,
+      dont_redirect_to = [root_url, ldap_callback_url, unauthorized_url,
                           internal_error_url, not_found_url]
 
       unless ENV['OAUTH2_REDIRECT'].nil?
@@ -61,7 +78,7 @@ module Authenticator
       # Delete the cookie if it exists
       cookies.delete :return_to if cookies[:return_to]
 
-      redirect_to url
+      # redirect_to url
     else
       session[:user_id] = nil
       user.create_activation_token
