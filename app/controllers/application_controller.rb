@@ -47,21 +47,15 @@ class ApplicationController < ActionController::Base
 
     if @current_user.nil?
 
-      unless token
-        redirect_to '/404'
-      end
-
       if token
-        response = HTTParty.get("https://vznaniya.ru/api/v2/profile",
+        response = HTTParty.get(ENV["VZNANIYA_URL"] + "/api/v2/profile",
                                  :headers => {
                                    'Content-Type' => 'application/json',
                                    'Authorization' => 'Bearer ' + token
                    }
         )
 
-        if response.headers['content-type'] === "text/html; charset=UTF-8"
-          redirect_to '/404'
-        else
+        if response.headers['content-type'] != "text/html; charset=UTF-8"
 
           data = JSON.parse(response.body, object_class: OpenStruct)
           @current_user ||= User.includes(:role, :main_room).find_by(external_id: data.data.id)
@@ -80,7 +74,7 @@ class ApplicationController < ActionController::Base
             @user.update(:room_id => room.id)
             @user.save(:validate => false)
             if data.data.role == 'teacher'
-              groups_res = HTTParty.get("https://vznaniya.ru/api/v2/groups/filter",
+              groups_res = HTTParty.get(ENV["VZNANIYA_URL"] + "/api/v2/groups/filter",
                                        :headers => {
                                          'Content-Type' => 'application/json',
                                          'Authorization' => 'Bearer ' + token
@@ -100,11 +94,9 @@ class ApplicationController < ActionController::Base
 
           end
 
-          if @current_user.nil?
-            redirect_to '/404'
+          if @current_user
+            loginssss(@current_user)
           end
-
-          loginssss(@current_user)
 
         end
       end

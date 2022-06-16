@@ -18,7 +18,66 @@
 
 class HealthCheckController < ApplicationController
   skip_before_action :redirect_to_https, :set_user_domain, :set_user_settings, :maintenance_mode?, :migration_error?,
-  :user_locale, :check_admin_password, :check_user_role
+                     :user_locale, :check_admin_password, :check_user_role
+
+  def groups
+    token = nil
+    group = nil
+
+    unless token
+      request.query_parameters.each do |key, value|
+        if key == 'token'
+          token = value
+        end
+        if key == 'group'
+          group = value
+        end
+      end
+    end
+
+    puts token
+
+    if token
+      response = HTTParty.get(ENV["VZNANIYA_URL"] + "/api/v2/profile",
+                              :headers => {
+                                'Content-Type' => 'application/json',
+                                'Authorization' => token
+                              }
+      )
+
+      puts ENV["VZNANIYA_URL"] + "/api/v2/profile"
+      puts response.headers['content-type']
+
+      if response.headers['content-type'] != "text/html; charset=UTF-8"
+
+        data = JSON.parse(response.body, object_class: OpenStruct)
+        user = User.includes(:role, :main_room).find_by(external_id: data.data.id)
+
+        puts user
+
+        if user and data.data.role == 'teacher'
+          groups_res = HTTParty.get(ENV["VZNANIYA_URL"] + "/api/v2/groups/filter",
+                                    :headers => {
+                                      'Content-Type' => 'application/json',
+                                      'Authorization' => token
+                                    }
+          )
+
+          puts ENV["VZNANIYA_URL"] + "/api/v2/groups/filter"
+
+          groups = JSON.parse(groups_res.body, object_class: OpenStruct).data
+          groups.each_with_index { |group, index|
+            unless Room.exists?(:external_id => group.id)
+              room = Room.create(:user_id => user.id, :name => group.name, :deleted => false, :created_at => Time.now.getutc, :updated_at => Time.now.getutc, :external_id => group.id)
+              room.save(:validate => false)
+            end
+          }
+        end
+      end
+    end
+
+    render plain: "success"
+  end
 
   # GET /health_check
   def all

@@ -97,7 +97,7 @@ module Joiner
     {
       user_is_moderator: false,
       meeting_logout_url: request.base_url + logout_room_path(@room),
-      # moderator_message: "test",
+      moderator_message: "Чтобы пригласить ученика в качестве гостя, отправьте ему эту ссылку: <b>" + ENV["BASE_URL"] + "/b/" + @room.uid + "</b>",
       host: request.host,
       recording_default_visibility: @settings.get_value("Default Recording Visibility") == "public"
     }
