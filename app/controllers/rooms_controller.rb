@@ -58,7 +58,7 @@ class RoomsController < ApplicationController
 
     # Redirect to room is auto join was not turned on
     return redirect_to @room,
-      flash: { success: I18n.t("room.create_room_success") } unless room_params[:auto_join] == "1"
+                       flash: { success: I18n.t("room.create_room_success") } unless room_params[:auto_join] == "1"
 
     # Start the room if auto join was turned on
     start
@@ -107,7 +107,7 @@ class RoomsController < ApplicationController
   # POST /:room_uid
   def join
     return redirect_to root_path,
-      flash: { alert: I18n.t("administrator.site_settings.authentication.user-info") } if auth_required
+                       flash: { alert: I18n.t("administrator.site_settings.authentication.user-info") } if auth_required
 
     @shared_room = room_shared_with_user
 
@@ -175,6 +175,7 @@ class RoomsController < ApplicationController
     # Join the user in and start the meeting.
     opts = default_meeting_options
     opts[:user_is_moderator] = true
+    resp = HTTParty.get(ENV["VZNANIYA_URL"] + "/api/v2/notification/start", :headers => {'Content-Type' => 'application/json' }, :query => { uid: @room.uid, id: @room.external_id })
 
     # Include the user's choices for the room settings
     @room_settings = JSON.parse(@room[:room_settings])
@@ -361,8 +362,8 @@ class RoomsController < ApplicationController
 
   def room_params
     params.require(:room).permit(:name, :auto_join, :mute_on_join, :access_code,
-      :require_moderator_approval, :anyone_can_start, :all_join_moderator,
-      :recording, :presentation, :moderator_access_code)
+                                 :require_moderator_approval, :anyone_can_start, :all_join_moderator,
+                                 :recording, :presentation, :moderator_access_code)
   end
 
   # Find the room from the uid.
@@ -373,19 +374,19 @@ class RoomsController < ApplicationController
   # Ensure the user either owns the room or is an admin of the room owner or the room is shared with him
   def verify_room_ownership_or_admin_or_shared
     return redirect_to root_path unless @room.owned_by?(current_user) ||
-                                        room_shared_with_user ||
-                                        current_user&.admin_of?(@room.owner, "can_manage_rooms_recordings")
+      room_shared_with_user ||
+      current_user&.admin_of?(@room.owner, "can_manage_rooms_recordings")
   end
 
   # Ensure the user either owns the room or is an admin of the room owner
   def verify_room_ownership_or_admin
     return redirect_to root_path if !@room.owned_by?(current_user) &&
-                                    !current_user&.admin_of?(@room.owner, "can_manage_rooms_recordings")
+      !current_user&.admin_of?(@room.owner, "can_manage_rooms_recordings")
   end
 
   # Ensure the user owns the room or is allowed to start it
   def verify_room_ownership_or_shared
-   return redirect_to root_path unless @room.owned_by?(current_user) || room_shared_with_user
+    return redirect_to root_path unless @room.owned_by?(current_user) || room_shared_with_user
   end
 
   def validate_accepted_terms
@@ -453,17 +454,17 @@ class RoomsController < ApplicationController
   # Gets the room setting based on the option set in the room configuration
   def room_setting_with_config(name)
     config = case name
-    when "muteOnStart"
-      "Room Configuration Mute On Join"
-    when "requireModeratorApproval"
-      "Room Configuration Require Moderator"
-    when "joinModerator"
-      "Room Configuration All Join Moderator"
-    when "anyoneCanStart"
-      "Room Configuration Allow Any Start"
-    when "recording"
-      "Room Configuration Recording"
-    end
+             when "muteOnStart"
+               "Room Configuration Mute On Join"
+             when "requireModeratorApproval"
+               "Room Configuration Require Moderator"
+             when "joinModerator"
+               "Room Configuration All Join Moderator"
+             when "anyoneCanStart"
+               "Room Configuration Allow Any Start"
+             when "recording"
+               "Room Configuration Recording"
+             end
 
     case @settings.get_value(config)
     when "enabled"

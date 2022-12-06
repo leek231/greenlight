@@ -28,19 +28,20 @@ class SessionsController < ApplicationController
 
   # GET /signin
   def signin
-    check_if_twitter_account
+    # check_if_twitter_account
+    #
+    # @providers = configured_providers
 
-    @providers = configured_providers
-
-    if one_provider
-      provider_path = if Rails.configuration.omniauth_ldap
-        ldap_signin_path
-      else
-        "#{Rails.configuration.relative_url_root}/auth/#{@providers.first}"
-      end
-
-      redirect_post(provider_path, options: { authenticity_token: :auto })
-    end
+    # if one_provider
+    #   provider_path = if Rails.configuration.omniauth_ldap
+    #     ldap_signin_path
+    #   else
+    #     "#{Rails.configuration.relative_url_root}/auth/#{@providers.first}"
+    #   end
+    #
+    #   redirect_post(provider_path, options: { authenticity_token: :auto })
+    # end
+    # puts "hi"
   end
 
   # GET /ldap_signin

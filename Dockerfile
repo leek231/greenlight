@@ -19,12 +19,14 @@ RUN apk update \
     && apk upgrade \
     && apk add --update --no-cache $BUILD_PACKAGES $DEV_PACKAGES $RUBY_PACKAGES
 
+RUN bundle config --global frozen 0
+RUN bundle config unset frozen
+**
 COPY Gemfile* ./
 COPY Gemfile Gemfile.lock $RAILS_ROOT/
-
-RUN bundle config --global frozen 1 \
-    && bundle config set deployment 'true' \
-    && bundle config set without 'development:test:assets' \
+RUN bundle config --global frozen 0
+RUN bundle config unset frozen
+RUN bundle config set without 'development:test:assets' \
     && bundle install -j4 --path=vendor/bundle
 RUN rm -rf vendor/bundle/ruby/2.7.0/cache/*.gem \
     && find vendor/bundle/ruby/2.7.0/gems/ -name "*.c" -delete \

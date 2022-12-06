@@ -94,12 +94,10 @@ module Joiner
 
   # Default, unconfigured meeting options.
   def default_meeting_options
-    moderator_message = "#{I18n.t('invite_message')}<br> #{request.base_url + room_path(@room)}"
-    moderator_message += "<br> #{I18n.t('modal.create_room.access_code')}: #{@room.access_code}" if @room.access_code.present?
     {
       user_is_moderator: false,
       meeting_logout_url: request.base_url + logout_room_path(@room),
-      moderator_message: moderator_message,
+      moderator_message: "Чтобы пригласить ученика в качестве гостя, отправьте ему эту ссылку: <b>" + ENV["BASE_URL"] + "/b/" + @room.uid + "</b>",
       host: request.host,
       recording_default_visibility: @settings.get_value("Default Recording Visibility") == "public"
     }

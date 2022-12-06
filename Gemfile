@@ -10,6 +10,7 @@ end
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'aws-sdk-s3', '~> 1.88.1'
 gem 'bcrypt', '~> 3.1.7'
+gem 'httparty'
 gem 'bigbluebutton-api-ruby', '~> 1.9'
 gem 'bn-ldap-authentication', '~> 0.1.4'
 gem 'bootsnap', '~> 1.7.2', require: false
