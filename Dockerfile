@@ -21,7 +21,7 @@ RUN apk update \
 
 RUN bundle config --global frozen 0
 RUN bundle config unset frozen
-**
+
 COPY Gemfile* ./
 COPY Gemfile Gemfile.lock $RAILS_ROOT/
 RUN bundle config --global frozen 0
