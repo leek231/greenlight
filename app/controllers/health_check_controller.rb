@@ -79,6 +79,26 @@ class HealthCheckController < ApplicationController
     render plain: "success"
   end
 
+  # GET /link
+  def link
+    group = nil
+
+    unless group
+      request.query_parameters.each do |key, value|
+        if key == 'group'
+          group = value
+        end
+      end
+    end
+
+    unless group.nil?
+      room = Room.find_by(external_id: group)
+      if room
+        return '/b/' + room.uid
+      end
+    end
+  end
+
   # GET /health_check
   def all
     response = "success"
