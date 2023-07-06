@@ -19,6 +19,7 @@
 Rails.application.routes.draw do
   get '/health_check', to: 'health_check#all'
   get '/groups', to: 'health_check#groups', as: :update_groups
+  get '/link', to: 'health_check#link'
 
   # Error routes.
   match '/401', to: 'errors#unauthorized', via: :all, as: :unauthorized
